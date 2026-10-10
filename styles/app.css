@@ -1,4 +1,4 @@
-:root { --accent: #0e8a7e; }
+:root { --accent: #1f6c8f; }
 .schema { margin-top: 10px; font-family: var(--mono); font-size: 13px; }
 .schema details { border-bottom: 1px solid var(--line); padding: 6px 0; }
 .schema summary { cursor: pointer; font-weight: 600; }

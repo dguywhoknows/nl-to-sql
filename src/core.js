@@ -1,4 +1,4 @@
-/* core.js — pure helpers for SQL Copilot (no DOM, no sql.js; unit-tested). */
+/* Pure helpers for SQL Copilot (no DOM, no sql.js; unit-tested). */
 
 /* RFC-4180-ish CSV parser: quoted fields, escaped quotes, CRLF, blank-line skipping. */
 function parseCSV(text) {
