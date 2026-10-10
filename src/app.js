@@ -67,7 +67,7 @@ function runSQL(sql) {
   const t0 = performance.now();
   const res = db.exec(sql);
   const ms = performance.now() - t0;
-  const out = res[res.length - 1] || { columns: ['result'], values: [['OK — statement executed (' + db.getRowsModified() + ' rows modified)']] };
+  const out = res[res.length - 1] || { columns: ['result'], values: [['OK: statement executed (' + db.getRowsModified() + ' rows modified)']] };
   last = { ...out, sql, ms };
   if (!history.includes(sql)) { history.unshift(sql); history.length = Math.min(history.length, 25); }
   renderHistory();
@@ -88,7 +88,7 @@ function renderResults() {
 }
 
 function showError(msg) {
-  $('#tab-table').innerHTML = `<div class="err">⚠ ${esc(msg)}</div>`;
+  $('#tab-table').innerHTML = `<div class="err">${esc(msg)}</div>`;
   $('#meta').textContent = '';
   switchTab('table');
 }
@@ -251,7 +251,7 @@ function renderPlan() {
     const res = db.exec('EXPLAIN QUERY PLAN ' + sql)[0];
     const p = planTree(res ? res.values : []);
     const node = (n) => `<li><code>${esc(n.detail)}</code>${/^SCAN/.test(n.detail) && !/INDEX/.test(n.detail) ? ' <span class="tag warn">full scan</span>' : /INDEX/.test(n.detail) ? ' <span class="tag good">index</span>' : ''}${n.children.length ? `<ul>${n.children.map(node).join('')}</ul>` : ''}</li>`;
-    box.innerHTML = `<ul class="plan">${p.roots.map(node).join('')}</ul>` + (p.warnings.length ? `<p class="small" style="margin-top:10px">Full table scan on <b>${p.warnings.map(esc).join(', ')}</b>. For big tables, an index on the filtered/joined column helps. <button class="btn sm" id="idxAdvice">Suggest indexes</button></p><div id="idxOut" class="prose"></div>` : '<p class="small muted" style="margin-top:10px">No full table scans. 👍</p>');
+    box.innerHTML = `<ul class="plan">${p.roots.map(node).join('')}</ul>` + (p.warnings.length ? `<p class="small" style="margin-top:10px">Full table scan on <b>${p.warnings.map(esc).join(', ')}</b>. For big tables, an index on the filtered/joined column helps. <button class="btn sm" id="idxAdvice">Suggest indexes</button></p><div id="idxOut" class="prose"></div>` : '<p class="small muted" style="margin-top:10px">No full table scans.</p>');
     $('#idxAdvice')?.addEventListener('click', (e) => busy(e.currentTarget, async () => {
       const text = await AI.chat([{ role: 'system', content: 'You are a SQLite performance expert. Given a query and its plan, propose at most 3 CREATE INDEX statements that would remove the full scans, each with a one-line reason. Markdown with a ```sql block.' }, { role: 'user', content: `Schema:\n${schemaPrompt()}\n\nQuery:\n${sql}\n\nPlan:\n${res.values.map((r) => r[3]).join('\n')}` }], { temperature: 0.2, demo: "```sql\nCREATE INDEX idx_orders_date ON orders(order_date);\nCREATE INDEX idx_items_order ON order_items(order_id);\n```\n- **orders(order_date)** turns the date filter into a range search.\n- **order_items(order_id)** turns the join into an index lookup.\n\n*(demo)*" });
       $('#idxOut').innerHTML = md(text);
@@ -266,7 +266,7 @@ function showER() {
   const W = Math.max(...Object.values(pos).map((p) => p.x + p.w)) + 20, H = Math.max(...Object.values(pos).map((p) => p.y + p.h)) + 20;
   const colY = (t, c) => { const i = info.find((x) => x.name === t).columns.findIndex((k) => k.name === c); return pos[t].y + 44 + Math.max(0, i) * 20; };
   let s = edges.map((e) => { const a = pos[e.from], b = pos[e.to]; if (!b) return ''; const y1 = colY(e.from, e.col), y2 = b.y + 16; const x1 = a.x < b.x ? a.x + a.w : a.x, x2 = a.x < b.x ? b.x : b.x + b.w; return `<path d="M${x1 + 10},${y1} C${(x1 + x2) / 2 + 10},${y1} ${(x1 + x2) / 2 + 10},${y2} ${x2 + 10},${y2}" fill="none" stroke="var(--accent)" stroke-width="1.6" marker-end="url(#er-arr)"/>`; }).join('');
-  s += info.map((t) => { const p = pos[t.name]; return `<g transform="translate(${p.x + 10},${p.y + 10})"><rect width="${p.w}" height="${p.h}" rx="8" fill="var(--panel)" stroke="var(--line)"/><rect width="${p.w}" height="28" rx="8" fill="var(--accent)"/><text x="10" y="19" fill="#fff" font-weight="700" font-size="13">${esc(t.name)}</text>${t.columns.map((c, i) => `<text x="10" y="${48 + i * 20}" font-size="12" fill="var(--text)" font-family="var(--mono)">${t.fks.some((f) => f.from === c.name) ? '🔗 ' : c.name === 'id' ? '🔑 ' : ''}${esc(c.name)}</text><text x="${p.w - 10}" y="${48 + i * 20}" font-size="11" fill="var(--muted)" text-anchor="end">${esc(c.type)}</text>`).join('')}</g>`; }).join('');
+  s += info.map((t) => { const p = pos[t.name]; return `<g transform="translate(${p.x + 10},${p.y + 10})"><rect width="${p.w}" height="${p.h}" rx="8" fill="var(--panel)" stroke="var(--line)"/><rect width="${p.w}" height="28" rx="8" fill="var(--accent)"/><text x="10" y="19" fill="#fff" font-weight="700" font-size="13">${esc(t.name)}</text>${t.columns.map((c, i) => `<text x="10" y="${48 + i * 20}" font-size="12" fill="var(--text)" font-family="var(--mono)">${t.fks.some((f) => f.from === c.name) ? 'FK ' : c.name === 'id' ? 'PK ' : ''}${esc(c.name)}</text><text x="${p.w - 10}" y="${48 + i * 20}" font-size="11" fill="var(--muted)" text-anchor="end">${esc(c.type)}</text>`).join('')}</g>`; }).join('');
   $('#erOut').innerHTML = `<svg viewBox="0 0 ${W + 20} ${H + 20}" width="100%" role="img" aria-label="Entity relationship diagram"><defs><marker id="er-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/></marker></defs>${s}</svg>`;
   $('#erCard').classList.remove('hidden');
   $('#erCard').scrollIntoView({ behavior: 'smooth' });
@@ -311,3 +311,19 @@ initSqlJs({ locateFile: (f) => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.
   if (m) { try { $('#sql').value = b64decode(m[1]); toast('Loaded shared query'); } catch {} }
   runFromEditor();
 }).catch((e) => { $('#dbStatus').textContent = 'failed to load'; toast('Could not load SQLite: ' + e.message, 'err'); });
+
+/* ================= AI command box ================= */
+Copilot.register({
+  context: () => `Database schema:\n${db ? schemaPrompt().slice(0, 4000) : 'loading'}\nCurrent question: ${lastQuestion || 'none'}\nCurrent SQL:\n${$('#sql').value}\nLast result: ${last ? `${last.values.length} rows, columns ${last.columns.join(', ')}` : 'none'}.`,
+  actions: [
+    { name: 'ask_data', description: 'Turn a plain-language question into SQL, run it and show the table or chart', params: { question: 'the question' }, run: async ({ question }) => { $('#question').value = question; await ask(); return last ? `${last.values.length} rows: ${JSON.stringify(last.values.slice(0, 5))}` : 'No result'; } },
+    { name: 'run_sql', description: 'Run a read-only SQLite query you wrote, e.g. a refined version of the current SQL', params: { sql: 'SELECT or WITH query' },
+      run: ({ sql }) => { if (!isReadOnlySQL(sql)) throw new Error('Only single read-only SELECT/WITH queries'); $('#sql').value = sql; runSQL(sql); switchTab(last.values.length > 1 && $('#tab-chart svg') ? 'chart' : 'table'); return `${last.values.length} rows: ${JSON.stringify([last.columns, ...last.values.slice(0, 5)])}`; } },
+    { name: 'explain_query', description: 'Explain the current SQL clause by clause under the editor', params: {}, run: async () => { await explain(); return 'Explanation shown under the query'; } },
+    { name: 'insights', description: 'Write insights about the current result', params: {}, run: async () => { switchTab('insight'); await insight(); return $('#insight').innerText.slice(0, 600); } },
+    { name: 'show', description: 'Switch the result view', params: { view: 'table | chart | plan | insight' }, run: ({ view }) => { switchTab(['table', 'chart', 'plan', 'insight'].includes(view) ? view : 'table'); return `Showing ${view}`; } },
+    { name: 'er_diagram', description: 'Show the entity-relationship diagram', params: {}, run: () => { showER(); return 'Diagram shown'; } },
+    { name: 'profile_table', description: 'Profile a table (nulls, distinct values, ranges)', params: { table: 'table name from the schema' }, run: ({ table }) => { profile(table); return `Profiled ${table}`; } },
+    { name: 'result_rows', query: true, description: 'Look up the current result (up to 60 rows)', params: {}, run: () => (last ? JSON.stringify({ sql: last.sql, columns: last.columns, rows: last.values.slice(0, 60), total: last.values.length }) : 'No result yet') },
+  ],
+});
