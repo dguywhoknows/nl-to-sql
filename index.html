@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SQL Copilot</title>
+<meta name="description" content="Ask questions about your data in plain English. Real SQLite runs in your browser; AI writes, fixes and explains the SQL.">
+<meta name="app-repo" content="https://github.com/dguywhoknows/nl-to-sql">
+<meta name="app-version" content="2.0.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230e8a7e'/%3E%3Ctext x='16' y='21' text-anchor='middle' font-family='Arial%2CHelvetica%2Csans-serif' font-weight='700' font-size='13' fill='white'%3ESC%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles/base.css">
+<link rel="stylesheet" href="styles/app.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo" aria-hidden="true">SC</span><div><h1>SQL Copilot</h1><p>Plain-English questions → SQL → answers, all in your browser.</p></div></div>
+  <nav class="topnav" data-nav aria-label="Pages"></nav>
+  <div class="top-actions"><a class="btn ghost sm" href="https://github.com/dguywhoknows/nl-to-sql" target="_blank" rel="noopener">GitHub</a><span data-ai-badge></span></div>
+</header>
+<div class="page active" data-page="query" data-title="Query">
+<main class="grid side">
+  <aside class="stack">
+    <section class="card">
+      <div class="row between"><h2 style="margin:0">Schema</h2><span class="tag" id="dbStatus">loading SQLite…</span></div>
+      <div id="schema" class="schema"></div>
+      <div class="row" style="margin-top:12px">
+        <label class="btn sm" style="color:var(--text)">Import CSV<input type="file" id="csv" accept=".csv,text/csv" hidden></label>
+        <button class="btn sm ghost" id="erBtn">ER diagram</button>
+        <button class="btn sm ghost" id="reset">Reset sample DB</button>
+      </div>
+    </section>
+    <section class="card">
+      <h2>History</h2>
+      <div id="history" class="history small muted">No queries yet.</div>
+    </section>
+  </aside>
+  <section class="stack">
+    <div class="card stack">
+      <label>Ask a question
+        <div class="row" style="margin-top:5px"><input class="input grow" id="question" placeholder="e.g. Which 5 products earned the most revenue last year?"><button class="btn primary" id="ask">Ask</button></div>
+      </label>
+      <div class="row" id="suggestions"></div>
+      <label>SQL <span class="muted small">(Ctrl+Enter to run, edit freely)</span>
+        <textarea id="sql" class="mono" spellcheck="false" rows="6">SELECT category, COUNT(*) AS products, ROUND(AVG(price),2) AS avg_price
+FROM products GROUP BY category ORDER BY products DESC;</textarea>
+      </label>
+      <div class="row"><button class="btn" id="run">▶ Run</button><button class="btn ghost" id="explain">Explain query</button><button class="btn ghost" id="shareBtn" title="Copy a link that reopens this query">Share</button><button class="btn ghost" id="csvBtn">CSV</button><span class="grow"></span><span class="small muted" id="meta"></span></div>
+      <div id="explanation" class="prose hidden"></div>
+    </div>
+    <div class="card">
+      <div class="tabs"><button class="on" data-tab="table">Table</button><button data-tab="chart">Chart</button><button data-tab="plan">Query plan</button><button data-tab="insight">AI insight</button></div>
+      <div id="tab-table" class="table-wrap"><div class="empty">Run a query to see results.</div></div>
+      <div id="tab-chart" class="hidden"></div>
+      <div id="tab-plan" class="hidden"></div>
+      <div id="tab-insight" class="hidden"><button class="btn sm" id="insightBtn">Summarize these results</button><div id="insight" class="prose" style="margin-top:10px"></div></div>
+    </div>
+    <div class="card hidden" id="erCard"><div class="row between"><h2 style="margin:0">Schema explorer</h2><button class="btn sm ghost" id="closeEr">✕</button></div><div id="erOut" style="margin-top:10px"></div></div>
+  </section>
+</main>
+</div>
+<div class="page" data-page="settings" data-title="Settings"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.14.2/sql-wasm.js"></script>
+<script src="src/lib/dom.js"></script>
+<script src="src/lib/ai.js"></script>
+<script src="src/lib/router.js"></script>
+<script src="src/core.js"></script>
+<script src="src/app.js"></script>
+</body>
+</html>

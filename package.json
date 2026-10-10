@@ -1,0 +1,16 @@
+{
+  "name": "nl-to-sql",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Ask questions about data in plain English. A real SQLite engine runs in your browser while AI writes, repairs and explains the SQL.",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "test": "node tests/run-node.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dguywhoknows/nl-to-sql.git"
+  },
+  "homepage": "https://dguywhoknows.github.io/nl-to-sql/",
+  "license": "MIT"
+}
